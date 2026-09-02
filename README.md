@@ -46,12 +46,16 @@ python -m pip install -r requirements-dev.txt
 python -m pytest
 ruff check src tests
 ruff format --check src tests
+python -m build
 ```
+
+The build command creates a versioned wheel and source distribution under `dist/`, for example `event_data_product_pipeline-0.1.0-py3-none-any.whl` and `event_data_product_pipeline-0.1.0.tar.gz`.
 
 ## Repository structure
 
 ```text
 .
+|-- .github/workflows/ci.yml                        # executable GitHub CI
 |-- .gitlab-ci.yml
 |-- Principal_Data_Engineer_Candidate_Take_Home.md  # original, unchanged
 |-- README.md
@@ -231,7 +235,9 @@ The example SLO is: **previous business-day ADS/Gold datasets publish before 06:
 
 ## CI/CD and environments
 
-Merge requests run Ruff format/lint, `python -m pytest`, the local sample contract/pipeline validation, and package/build checks, with no deployment. The default branch runs the same checks and supports controlled promotion through dev and test. Production requires manual approval and promotes the same immutable code version.
+GitHub Actions runs for pull requests targeting `main` and pushes to `main`. Pull-request CI is the pre-merge quality gate: it installs dependencies, runs Ruff format/lint, `python -m pytest`, and the local sample pipeline validation, then builds a real versioned wheel and source distribution with `python -m build`. The contents of `dist/` are uploaded as an immutable CI artifact. After merge, the same workflow validates and packages the final `main` state. In a production GitHub repository, branch protection and required status checks would be configured in repository settings so CI must pass before merging.
+
+The retained GitLab pipeline mirrors these checks and now also builds `dist/`. Its dev/test/prod jobs remain an explicit reference design rather than functional CD: no GCP resources are provisioned and no deployment commands or credentials are included. Production promotion would require manual approval and reuse the same tested artifact/version.
 
 Environment-specific project IDs, dataset names, bucket names, thresholds, and service accounts live in reviewed configuration, not code forks. GCP authentication should use short-lived identity federation and environment-specific service accounts rather than checked-in keys. Secrets belong in Secret Manager or protected CI variables and never in Git or job logs.
 
