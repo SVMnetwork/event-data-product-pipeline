@@ -15,8 +15,6 @@ from airflow.decorators import dag, task
     default_args={
         "retries": 2,
         "retry_delay": timedelta(minutes=5),
-        "retry_exponential_backoff": True,
-        "max_retry_delay": timedelta(minutes=30),
     },
     tags=["events", "data-product", "gcp", "t-plus-1"],
 )
