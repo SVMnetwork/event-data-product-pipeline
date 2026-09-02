@@ -206,6 +206,22 @@ T+1 does not remove late-data concerns. If an event for `business_date=2026-09-0
 
 Under the stated assumptions, a warehouse-centric design keeps operations low because consumers are primarily BI/analytics users and most downstream work is relational SQL. GCS still provides an independent durable Raw/replay layer. An open-table lakehouse becomes more attractive when multiple compute engines must share object-storage tables, open formats are a strategic requirement, or direct distributed lake access is primary. Neither model is universally superior.
 
+### Managed vs. self-managed services
+
+For the assumed small-to-medium data engineering team, I prefer managed/serverless services such as BigQuery, Pub/Sub, and Cloud Composer to reduce operational work around provisioning, scaling, patching, and high availability.
+
+The trade-off is less infrastructure-level control, greater dependence on GCP, and potentially less portability than self-managed Kafka/Flink/Spark or Kubernetes-based platforms.
+
+I would consider self-managed or more open infrastructure when specialized runtime control, portability, multi-cloud requirements, or measured cost/performance justify the additional operational burden.
+
+### Batch vs. streaming
+
+The initial analytical path is T+1 batch because the assumed SLA does not require real-time publication. Continuous event capture is still used to avoid data loss and decouple producers from downstream processing.
+
+Batch keeps the platform simpler, cheaper, and easier to replay and backfill, at the cost of lower freshness.
+
+If requirements move to hourly freshness, I would first shorten the batch interval. I would introduce a true streaming transformation path only when seconds/minutes latency is justified by a business use case.
+
 ## Data quality and failure handling
 
 Checks cover required-field completeness, nullability, expected types, timestamps, accepted values, uniqueness, referential integrity where applicable, freshness, source-to-target reconciliation, input/output volume, and quarantine rate. BigQuery SQL validation queries gate DWS/ADS publication; no additional data-quality framework is needed for this scoped design.
@@ -251,10 +267,6 @@ Environment-specific project IDs, dataset names, bucket names, thresholds, and s
 - Use Secret Manager for secrets and Cloud Audit Logs for administrative and data-access auditability.
 - Apply retention and deletion policies consistently to GCS, BigQuery, staging, quarantine, logs, and backups.
 
-## Observability and lineage
-
-Cloud Logging, Cloud Monitoring, and Airflow metadata track records read, accepted, rejected, and deduplicated; freshness; duration; input/output volume; BigQuery bytes processed; reconciliation; and publication status. Traceability includes source object, source business date, run ID, code/config version, target table/partition, owner, and SLO. Lineage remains a production concern; OpenLineage could standardize it, but is not mandatory for this submission.
-
 ## BigQuery cost and performance
 
 - Process incrementally and avoid unnecessary full refreshes.
@@ -279,7 +291,7 @@ Technology evolution should follow business latency and measured workload eviden
 
 ## Next production increments
 
-1. Publish a versioned machine-readable contract and compatibility tests for producer fixtures.
+1. Version the input schema and test upstream sample data against it to catch breaking changes early.
 2. Implement source-specific GCS ingestion and BigQuery staging/DWD integration tests in an isolated environment.
 3. Add BigQuery SQL models and quality gates for consumer-approved DWS/ADS requirements.
 4. Emit Cloud Logging/Monitoring metrics, processing-ledger metadata, and optional standardized lineage.
