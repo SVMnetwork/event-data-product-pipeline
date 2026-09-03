@@ -234,7 +234,6 @@ The build creates `dist/event_data_product_pipeline-0.1.0-py3-none-any.whl` and 
 |-- .gitlab-ci.yml                       # validation/build plus conceptual CD
 |-- README.md
 |-- data/input/events.json               # synthetic Raw/ODS input
-|-- docs/architecture.md                 # detailed production reference design
 |-- orchestration/event_pipeline_dag.py  # illustrative Composer/Airflow DAG
 |-- pyproject.toml                       # package metadata and tool configuration
 |-- requirements-dev.txt
